@@ -1,0 +1,33 @@
+name: Deploy to EC2 via Docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # This means it will use the EC2 runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        run: |
+          sudo apt update
+          sudo apt install -y docker.io
+          sudo usermod -aG docker $USER
+
+      - name: Build Docker image
+        run: |
+          docker build -t my-nextjs-app .
+
+      - name: Stop existing container (if any)
+        run: |
+          docker stop nextjs-container || true
+          docker rm nextjs-container || true
+
+      - name: Run Docker container
+        run: |
+          docker run -d -p 3000:3000 --name nextjs-container my-nextjs-app
